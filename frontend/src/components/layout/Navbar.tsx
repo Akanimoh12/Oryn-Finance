@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Shield } from 'lucide-react';
 import { WalletSelector } from '@/components/WalletSelector';
 import { WalletBalance } from '@/components/wallet/WalletBalance';
 import { CompactWalletBalance } from '@/components/wallet/CompactWalletBalance';
@@ -9,6 +9,7 @@ import { useWallet } from '@/contexts/WalletContext';
 const navItems = [
   { name: 'Home', path: '/' },
   { name: 'Markets', path: '/markets' },
+  { name: 'Liquidity', path: '/liquidity' },
   { name: 'Create', path: '/create' },
   { name: 'About', path: '/about' },
   { name: 'Leaderboard', path: '/leaderboard' },
@@ -19,7 +20,12 @@ const navItems = [
 export function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isConnected } = useWallet();
+  const { isConnected, publicKey } = useWallet();
+
+  const adminAddresses = (import.meta.env.VITE_ADMIN_ADDRESSES || '').split(',').map((a: string) => a.trim().toLowerCase());
+  const isAdmin = isConnected && publicKey && (
+    adminAddresses.includes(publicKey.toLowerCase()) || import.meta.env.DEV
+  );
 
   return (
     <>
@@ -49,6 +55,15 @@ export function Navbar() {
 
           {/* Wallet Section */}
           <div className="flex gap-2 items-center flex-shrink-0">
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className={`hidden lg:flex items-center gap-1 text-sm font-medium transition-colors hover:text-orange-400 ${location.pathname === '/admin' ? 'text-orange-400' : 'text-neutral-400'}`}
+              >
+                <Shield className="w-4 h-4" />
+                Admin
+              </Link>
+            )}
             {isConnected && (
               <>
                 <div className="hidden lg:block">
@@ -99,6 +114,15 @@ export function Navbar() {
                   {item.name}
                 </Link>
               ))}
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className={`text-2xl font-bold flex items-center gap-2 ${location.pathname === '/admin' ? 'text-orange-400' : 'text-neutral-400'}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Shield className="w-6 h-6" /> Admin
+                </Link>
+              )}
               
               <div className="mt-8">
                 <WalletSelector />

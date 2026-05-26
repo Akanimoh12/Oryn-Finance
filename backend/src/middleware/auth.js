@@ -171,23 +171,27 @@ class AuthMiddleware {
       });
     }
 
-    // Check if user has admin privileges
-    const adminAddresses = (process.env.ADMIN_ADDRESSES || '').split(',').map(addr => addr.trim().toLowerCase());
-    
-    if (!adminAddresses.includes(req.user.walletAddress)) {
-      logger.auth('Admin access denied', {
+    // Accept admin role from JWT claim OR from ADMIN_ADDRESSES env list
+    const adminAddresses = (process.env.ADMIN_ADDRESSES || '').split(',').map(addr => addr.trim().toLowerCase()).filter(Boolean);
+    const isAdminByAddress = adminAddresses.includes(req.user.walletAddress);
+    const isAdminByJwtRole = req.user.userData?.isAdmin === true;
+
+    if (!isAdminByAddress && !isAdminByJwtRole) {
+      logger.warn('Admin access denied', {
         walletAddress: req.user.walletAddress,
-        adminAddresses: adminAddresses.length
+        jwtRole: isAdminByJwtRole,
+        addressMatch: isAdminByAddress,
       });
-      
+
       return res.status(403).json({
         success: false,
         message: 'Admin privileges required'
       });
     }
 
-    logger.auth('Admin access granted', {
-      walletAddress: req.user.walletAddress
+    logger.info('Admin access granted', {
+      walletAddress: req.user.walletAddress,
+      via: isAdminByJwtRole ? 'jwt-role' : 'address-list',
     });
 
     next();
@@ -245,22 +249,25 @@ class AuthMiddleware {
 
 // JWT Token Generation
 class TokenService {
-  static generateToken(walletAddress, expiresIn = '7d') {
+  static generateToken(walletAddress, expiresIn = '7d', extra = {}) {
+    const adminAddresses = (process.env.ADMIN_ADDRESSES || '').split(',').map(a => a.trim().toLowerCase()).filter(Boolean);
     const payload = {
       walletAddress: walletAddress.toLowerCase(),
-      iat: Math.floor(Date.now() / 1000)
+      isAdmin: adminAddresses.includes(walletAddress.toLowerCase()),
+      iat: Math.floor(Date.now() / 1000),
+      ...extra,
     };
-
     return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
   }
 
   static generateAccessToken(walletAddress) {
+    const adminAddresses = (process.env.ADMIN_ADDRESSES || '').split(',').map(a => a.trim().toLowerCase()).filter(Boolean);
     const payload = {
       walletAddress: walletAddress.toLowerCase(),
+      isAdmin: adminAddresses.includes(walletAddress.toLowerCase()),
       tokenType: 'access',
-      iat: Math.floor(Date.now() / 1000)
+      iat: Math.floor(Date.now() / 1000),
     };
-
     return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
   }
 
