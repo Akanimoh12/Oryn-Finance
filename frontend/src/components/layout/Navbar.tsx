@@ -9,6 +9,7 @@ import { useWallet } from '@/contexts/WalletContext';
 const navItems = [
   { name: 'Home', path: '/' },
   { name: 'Markets', path: '/markets' },
+  { name: 'Liquidity', path: '/liquidity' },
   { name: 'Create', path: '/create' },
   { name: 'About', path: '/about' },
   { name: 'Leaderboard', path: '/leaderboard' },

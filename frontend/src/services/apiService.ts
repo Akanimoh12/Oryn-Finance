@@ -507,6 +507,120 @@ export const analyticsService = {
   }
 };
 
+// Liquidity Services
+export const liquidityService = {
+  async getStats(): Promise<any> {
+    const response = await apiClient.get(ENDPOINTS.LIQUIDITY_STATS);
+    if (!response.success) throw new Error(response.message || 'Failed to fetch liquidity stats');
+    return response.data;
+  },
+
+  async getPools(params?: { category?: string; status?: string; page?: number; limit?: number }): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) queryParams.append(key, String(value));
+      });
+    }
+    const endpoint = queryParams.toString() ? `${ENDPOINTS.LIQUIDITY_POOLS}?${queryParams}` : ENDPOINTS.LIQUIDITY_POOLS;
+    const response = await apiClient.get(endpoint);
+    if (!response.success) throw new Error(response.message || 'Failed to fetch liquidity pools');
+    return response.data;
+  },
+
+  async getPool(marketId: string): Promise<any> {
+    const response = await apiClient.get(ENDPOINTS.LIQUIDITY_POOL(marketId));
+    if (!response.success) throw new Error(response.message || 'Failed to fetch pool');
+    return response.data;
+  },
+
+  async getDepthChart(marketId: string): Promise<any> {
+    const response = await apiClient.get(ENDPOINTS.LIQUIDITY_DEPTH(marketId));
+    if (!response.success) throw new Error(response.message || 'Failed to fetch depth chart');
+    return response.data;
+  },
+};
+
+// Admin Services
+export const adminService = {
+  async getDashboard(authToken: string): Promise<any> {
+    apiClient.setAuthToken(authToken);
+    const response = await apiClient.get(ENDPOINTS.ADMIN_DASHBOARD);
+    if (!response.success) throw new Error(response.message || 'Failed to fetch admin dashboard');
+    return response.data;
+  },
+
+  async getUsers(authToken: string, params?: { page?: number; limit?: number; search?: string; status?: string }): Promise<any> {
+    apiClient.setAuthToken(authToken);
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') queryParams.append(key, String(value));
+      });
+    }
+    const endpoint = queryParams.toString() ? `${ENDPOINTS.ADMIN_USERS}?${queryParams}` : ENDPOINTS.ADMIN_USERS;
+    const response = await apiClient.get(endpoint);
+    if (!response.success) throw new Error(response.message || 'Failed to fetch users');
+    return response.data;
+  },
+
+  async updateUser(authToken: string, walletAddress: string, data: any): Promise<any> {
+    apiClient.setAuthToken(authToken);
+    const response = await apiClient.put(ENDPOINTS.ADMIN_USER(walletAddress), data);
+    if (!response.success) throw new Error(response.message || 'Failed to update user');
+    return response.data;
+  },
+
+  async resolveMarket(authToken: string, marketId: string, data: { outcome: string; resolution: string }): Promise<any> {
+    apiClient.setAuthToken(authToken);
+    const response = await apiClient.put(ENDPOINTS.ADMIN_MARKETS_RESOLVE(marketId), data);
+    if (!response.success) throw new Error(response.message || 'Failed to resolve market');
+    return response.data;
+  },
+
+  async getPendingTrades(authToken: string, params?: { page?: number; limit?: number }): Promise<any> {
+    apiClient.setAuthToken(authToken);
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) queryParams.append(key, String(value));
+      });
+    }
+    const endpoint = queryParams.toString() ? `${ENDPOINTS.ADMIN_TRADES_PENDING}?${queryParams}` : ENDPOINTS.ADMIN_TRADES_PENDING;
+    const response = await apiClient.get(endpoint);
+    if (!response.success) throw new Error(response.message || 'Failed to fetch pending trades');
+    return response.data;
+  },
+
+  async updateTradeStatus(authToken: string, tradeId: string, data: { status: string; stellarTransactionHash?: string }): Promise<any> {
+    apiClient.setAuthToken(authToken);
+    const response = await apiClient.put(ENDPOINTS.ADMIN_TRADE(tradeId), data);
+    if (!response.success) throw new Error(response.message || 'Failed to update trade');
+    return response.data;
+  },
+
+  async getConfig(authToken: string): Promise<any> {
+    apiClient.setAuthToken(authToken);
+    const response = await apiClient.get(ENDPOINTS.ADMIN_CONFIG);
+    if (!response.success) throw new Error(response.message || 'Failed to fetch config');
+    return response.data;
+  },
+
+  async getLogs(authToken: string, params?: { level?: string; page?: number; limit?: number }): Promise<any> {
+    apiClient.setAuthToken(authToken);
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) queryParams.append(key, String(value));
+      });
+    }
+    const endpoint = queryParams.toString() ? `${ENDPOINTS.ADMIN_LOGS}?${queryParams}` : ENDPOINTS.ADMIN_LOGS;
+    const response = await apiClient.get(endpoint);
+    if (!response.success) throw new Error(response.message || 'Failed to fetch logs');
+    return response.data;
+  },
+};
+
 // Combined API service object
 export const apiService = {
   health: healthService,
@@ -517,4 +631,6 @@ export const apiService = {
   trades: tradeService,
   leaderboard: leaderboardService,
   analytics: analyticsService,
+  liquidity: liquidityService,
+  admin: adminService,
 };
