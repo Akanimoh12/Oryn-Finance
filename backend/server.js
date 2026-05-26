@@ -23,6 +23,7 @@ const leaderboardRoutes = require('./src/routes/leaderboard');
 const analyticsRoutes = require('./src/routes/analytics');
 const adminRoutes = require('./src/routes/admin');
 const oracleRoutes = require('./src/routes/oracle');
+const liquidityRoutes = require('./src/routes/liquidity');
 
 // Import services
 const backgroundJobs = require('./src/services/backgroundJobs');
@@ -163,6 +164,7 @@ class OrynBackendServer {
     this.app.use('/api/oracle', oracleRoutes);
     this.app.use('/api/leaderboard', leaderboardRoutes);
     this.app.use('/api/analytics', analyticsRoutes);
+    this.app.use('/api/liquidity', liquidityRoutes);
 
     // Transaction routes (mixed auth - some endpoints require auth, others don't)
     this.app.use('/api/transactions', transactionRoutes);
